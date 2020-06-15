@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>用户信息</title>
+
+    <link rel="stylesheet" type="text/css" href="main.css">
+
+    <script src="js/web3.min.js"></script>
+    
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="js/controlAbi.js"></script>
+    <script src="js/control.js"></script>
+
+</head>
+
+<body>
+
+    <div class="cover" id='cover'>
+        <div class="popup" style="height: 50%; width: 50%; top: 100px">
+            <div class="header">
+                <div class="header-right" onclick="hidder()">x</div>
+            </div>
+            <label for="newName" class="col-lg-2 control-label">
+            用户名
+            </label>
+            <input id="newName" type="text">
+
+            <label for="pwd" class="col-lg-2 control-label">
+            密码
+            </label>
+            <input id="pwd" type="text">
+
+            <label for="newAddress" class="col-lg-2 control-label">
+            账户地址
+            </label>
+            <input id="newAddress" type="text">
+
+            <label for="newDescription" class="col-lg-2 control-label">
+            用户描述
+            </label>
+                <input id="newDescription" type="text">
+            <div class="lr">
+                <button class="cbutton" onclick="alterU()">确认</button>
+            </div>
+            <div class="lr">
+                <button class="cbutton" onclick="hidder()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <h1>用户信息</h1>
+
+    <div class="display" style="height: 400px;">
+        <p id="name" class="detail"></p>
+        <p id="credit" class="detail"></p>
+        <p id="description" class="detail description"></p>
+        <button id="alter" onclick="alterCall()">修改</button>
+    </div>
+
+    <div>
+       <h2>我的数据</h2>
+        <div id="ldatas" class="udatas"></div>
+        <div id="rdatas" class="udatas"></div> 
+    </div>
+    
+    <div>
+        <h2>消息列表</h2>
+        <div id="lmsgs" class="datas"></div>
+        <div id="rmsgs" class="datas"></div>
+    </div>
+    
+    
+
+    
+
+    <div id="bottom" class="bottom">
+        <div class="lr">
+            <button class="cbutton" onclick="upload()">上传新数据</button>
+        </div>
+        <div class="lr">
+            <button class="cbutton" onclick="toMain()">返回首页</button>
+        </div>
+    </div>
+
+    <script>
+
+        var visitorAccount;
+        var msgId;
+        var ac;
+        user = getUrlPara();
+
+        function getDataDetail(id) {
+            return controlContract.methods.datas(id)
+            .call({from: userAccount}, function(error, result) {
+                if(error)
+                {
+                    console.log(error);
+                }
+            });
+        }
+
+        function getUserDetail(id) {
+            getUser(id).then(function(userd) {
+                $("#name").text("用户名称：" + userd.userName);
+                $("#credit").text("用户积分：" + userd.credit);
+                $("#description").text("用户描述：" + userd.userDescription);
+
+                $("#newName").text("用户名称：" + userd.userName);
+                $("#newAddress").text("用户地址：" + userd.userAddress);
+                $("#newDescription").text("用户描述：" + userd.userDescription);
+            });
+        }
+
+
+        function getMsgList(id) {
+            return controlContract.methods.getMsgList(id)
+            .call({from: userAccount}, function(error, result) {
+                if(!error)
+                {
+                    console.log(result);
+                }
+                else console.log(error);
+            });
+        }
+
+        function displayDatas() {
+            getAccessible(user)
+            .then(function(result) {
+                var datas = [];
+                datas = result;
+                var k = 0;
+                for (var i = 0; i < datas.length; i++) {
+                    let id = datas[i];
+                    controlContract.methods.fdataToOwner(id).call({from: userAccount}, function(error1, ownerid) {
+                        if(!error1)
+                        {
+                            controlContract.methods.users(ownerid).call({from: userAccount}, function(error2, owner) {
+                                if(!error2)
+                                {
+                                    getDataDetail(id)
+                                    .then(function (datad) {
+                                        let dataURL = "dataDetail.html?user="+user+"&data="+id;
+                                        var yu = (k % 2);
+                                        if (yu == 0) {
+                                            let dn = getDataName(datad.dataName);
+                                            $("#ldatas").append(`<div class="data">
+                                              <p>数据名称: ${dn}</p>
+                                              <p>数据拥有者: ${owner.userName}</p>
+                                              <p>下载次数: ${datad.downloadTimes}</p>
+                                              <a href=${dataURL} style="display: inline-block;width: 100%; text-align: center;" target="_blank">详情</a>
+                                            </div>`);
+                                        }
+                                        else {
+                                            let dn = getDataName(datad.dataName);
+                                            $("#rdatas").append(`<div class="data">
+                                              <p>数据名称: ${dn}</p>
+                                              <p>数据拥有者: ${owner.userName}</p>
+                                              <p>下载次数: ${datad.downloadTimes}</p>
+                                              <a href=${dataURL} style="display: inline-block;width: 100%; text-align: center;" target="_blank">详情</a>
+                                            </div>`);
+                                        }
+                                        if(k == (datas.length - 1)) {
+                                            if((datas.length % 2) == 1) {
+                                                $("#rdatas").append(`<div class="data" style="height: 149px; border-color: transparent;"></div>`);
+                                            }
+                                        }
+                                        k++;
+                                    });
+                                }
+                                else console.log(error2);
+                            });
+                        }
+                        else console.log(error1);
+                    });
+                   
+                }
+            });
+
+        }
+
+        function approve(ac, id) {
+            console.log(ac);
+            console.log(id);
+            controlContract.methods.freeApproved(id).send({from: ac, gas:1000000})
+            .on("receipt", function (receipt) {
+                console.log(receipt);
+            })
+            .on("error", function (error) {                 
+                console.log(error);
+            });
+        }
+
+        function deny(ac, id) {
+            console.log(ac);
+            console.log(id);
+            controlContract.methods.freeDenied(id).send({from: ac, gas:1000000})
+            .on("receipt", function (receipt) {
+                console.log(receipt);
+            })
+            .on("error", function (error) {                 
+                console.log(error);
+            });
+        }   
+
+        function statusOutput(i) {
+            var txt = "";
+            if (i==0) {
+                txt = "处理中";
+            }
+            else if (i==1) {
+                txt = "批准";
+            }
+            else if (i==2) {
+                txt = "拒绝";
+            }
+            console.log(txt);
+            return txt;
+        }
+
+        function msgStatus(s1, s2, ba, n1, n2, t, msgId) {
+            if(isEmpty(t)) {
+                t = "未填写";
+            }
+            if(s2 == 1) {
+                ac = visitorAccount;
+                md = msgId;
+                console.log(md);
+                if ((ba % 2) == 0) {
+                    n2 = getDataName(n2);
+                    $("#lmsgs").append(`<div class="data" style="height: 220px;">
+                      <p>申请用户: ${n1}</p>
+                      <p>申请数据: ${n2}</p>
+                      <p>申请原因: ${t}</p>
+                      <div class="lr">
+                        <button id="a" onclick="console.log(md)">批准</button>
+                      </div>
+                      <div class="lr">
+                        <button id="d" onclick="console.log(md)">拒绝</button>
+                      </div>
+                    </div>`);
+                }
+                else {
+                    n2 = getDataName(n2);
+                    $("#rmsgs").append(`<div class="data" style="height: 220px;">
+                      <p>申请用户: ${n1}</p>
+                      <p>申请数据: ${n2}</p>
+                      <p>申请原因: ${t}</p>
+                      <div class="lr">
+                        <button id="a" onclick="console.log(md)">批准</button>
+                      </div>
+                      <div class="lr">
+                        <button id="d" onclick="console.log(md)">拒绝</button>
+                      </div>
+                    </div>`);
+                }
+            }
+            else {
+                var st = statusOutput(s1);
+                if ((ba % 2) == 0) {
+                    n2 = getDataName(n2);
+                    $("#lmsgs").append(`<div class="data" style="height: 200px; padding-top: 20px;">
+                      <p>数据拥有者: ${n1}</p>
+                      <p>申请数据: ${n2}</p>
+                      <p>申请原因: ${t}</p>
+                      <p>申请状态: ${st}</p>
+                    </div>`);
+                }
+                else {
+                    n2 = getDataName(n2);
+                    $("#rmsgs").append(`<div class="data" style="height: 200px; padding-top: 20px;">
+                      <p>数据拥有者: ${n1}</p>
+                      <p>申请数据: ${n2}</p>
+                      <p>申请原因: ${t}</p>
+                      <p>申请状态: ${st}</p>
+                    </div>`);
+                }
+            }
+        }
+ 
+        function displayMsgs() {
+            getMsgList(user)
+            .then(function(result) {
+                var msgs = [];
+                msgs = result;
+                var ba = 0;
+                for (var i =  0; i < msgs.length; i++) {
+                    let id = msgs[i];
+                    
+                    controlContract.methods.msgs(id).call({from: userAccount}, function(error1, msg) {
+                    if(!error1)
+                    {
+                        if(msg.resId == user) {
+                            if(msg.status == 0) {
+                                controlContract.methods.users(msg.reqId).call({from: userAccount}, function(error2, visitor) {
+                                    if(!error2)
+                                    {
+                                        console.log(msg);
+                                        console.log(visitor);
+                                        visitorAccount = visitor.userAddress;
+                                        console.log(ba);
+                                        getDataDetail(msg.dataId)
+                                        .then(function (data) {
+                                            console.log(data);
+                                            msgStatus(msg.status, 1, ba, visitor.userName, data.dataName, msg.text, msgs[ba]);
+                                            ba++;
+                                        });
+                                        console.log(msgs[ba]);
+                                    }
+                                    else console.log(error2);
+                                });
+                            }
+                        }
+                        else {
+                            controlContract.methods.users(msg.resId).call({from: userAccount}, function(error3, owner) {
+                                if(!error3)
+                                {
+                                    console.log(msg);
+                                    console.log(owner);
+                                    console.log(ba);
+                                    getDataDetail(msg.dataId)
+                                    .then(function (data) {
+                                        console.log(data);
+                                        msgStatus(msg.status, 0, ba, owner.userName, data.dataName, msg.text, msgs[ba]);
+                                        ba++;
+                                    });
+                                    console.log(msgs[ba]);
+                                }
+                                else console.log(error3);
+                            });
+                        }
+                    }
+                    else console.log(error1);
+                });
+                   
+                }
+            });
+
+        }
+
+
+       
+        function alterU() {
+            var name = $("#newName").val();
+            console.log(name);
+            var address = $("#newAddress").val();
+            var pwd = $("#pwd").val();
+            var des = $("#newDescription").val();
+            controlContract.methods.isExitUserName(name, user).call({from: userAccount}, function(error1, result1) {
+                if(!error1) {
+                    console.log(result1);
+                    controlContract.methods.isExitUserAddress(address, user).call({from: userAccount}, function(error2, result2) {
+                    if(!error2) {
+                        console.log(result2);
+                        if(!result1)
+                        {
+                            if(!result2)
+                            {
+                                controlContract.methods.alterUser(user, name, pwd, des, address).send({from: userAccount, gas:1000000})
+                                .on("receipt", function (receipt) {
+                                console.log(receipt);
+                                })
+                                .on("error", function (error) {                 
+                                console.log(error);
+                                alert("发生错误");
+                                });
+                            }
+                            else 
+                            {
+                                alert("用户地址已存在");
+                                console.log("地址重复");
+                            }
+                        }
+                        else 
+                        {
+                            alert("用户名已存在");
+                            console.log("用户名重复");
+                        }
+                    }
+                    else {
+                        console.log(error2);
+                    }
+                    });
+                }
+                else {
+                    console.log(error1);
+                }
+                    
+            });
+            
+        }
+
+        function alterCall() {
+            $("#bottom").hide();
+            $("#cover").show();
+        }
+
+        hidder();
+        setWeb3();
+        getUserDetail(user);
+        displayDatas();
+        displayMsgs();
+
+        controlContract.events.AlterUser(function(error, result) {
+            if (!error)
+                {
+                    console.log(result);
+                    alert("用户修改成功在链上发布！");
+                    hidder();
+                    let url = "userDetail.html?user=" + user;
+                    window.location.href = url;
+                } 
+            else console.log(error);
+        });
+
+        controlContract.events.FreeApproved(function(error, result) {
+            if (!error)
+                {
+                    console.log(result);
+                    alert("免费访问批准成功！");
+                    hidder();
+                    let url = "userDetail.html?user=" + user;
+                    window.location.href = url;
+                } 
+            else console.log(error);
+        });
+
+        controlContract.events.FreeDenied(function(error, result) {
+            if (!error)
+                {
+                    console.log(result);
+                    alert("免费访问拒绝成功！");
+                    hidder();
+                    let url = "userDetail.html?user=" + user;
+                    window.location.href = url;
+                } 
+            else console.log(error);
+        });
+
+    </script>
+
+    
+</body>
+
+</html>

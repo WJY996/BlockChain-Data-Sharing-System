@@ -1,0 +1,33 @@
+test3remix.call(message: {name, key, payload}): Call a registered plugins
+
+remix.getFile(path): Returns the content of the file located at the given path
+
+remix.setFile(path, content): set the content of the file located at the given path
+
+remix.debug(hash): Start debugging a transaction.
+
+remix.loadgist(id): Load a gist in the file explorer.
+
+remix.loadurl(url): Load the given url in the file explorer. The url can be of type github, swarm, ipfs or raw http
+
+remix.setproviderurl(url): Change the current provider to Web3 provider and set the url endpoint.
+
+remix.execute(filepath): Run the script specified by file path. If filepath is empty, script currently displayed in the editor is executed.
+
+remix.exeCurrent(): Run the script currently displayed in the editor
+
+remix.help(): Display this help message
+
+remix.debugHelp(): Display help message for debugging
+
+ - Welcome to Remix v0.10.1 - 
+
+You can use this terminal for: 
+Checking transactions details and start debugging.
+Running JavaScript scripts. The following libraries are accessible: 
+web3 version 1.0.0
+ethers.js
+swarmgw
+remix (run remix.help() for more info)
+Executing common command to interact with the Remix interface (see list of commands above). Note that these commands can also be included and run from a JavaScript script.
+Use exports/.register(key, obj)/.remove(key)/.clear() to register and reuse object across script executions.

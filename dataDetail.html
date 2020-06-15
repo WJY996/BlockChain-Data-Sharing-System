@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+	<script src="https://libs.baidu.com/jquery/1.11.3/jquery.min.js"></script>
+    <script src="js/web3.min.js"></script>
+    <script src="js/controlAbi.js"></script>
+    <script src="js/control.js"></script>
+    <link rel="stylesheet" type="text/css" href="main.css">
+	<title>数据详情</title>
+</head>
+
+<body>
+    <div class="cover" id='cover1'>
+        <div class="popup" style="height: 70%; width: 50%; top: 50px">
+            <div class="header">
+                <div class="header-right" onclick="hidder1()">x</div>
+            </div>
+                <div>
+                    <label for="newDescription">
+                    描述
+                    </label>
+                    <input id="newDescription" type="text" class="description">
+
+                    <label for="not">
+                    不被允许访问数据的用户（多个用户名请以","分隔）
+                    </label>
+                    <input id="not" type="text">
+
+                    <label for="newCredit">
+                    所需积分
+                    </label>
+                    <input id="newCredit" type="text">
+
+                </div>
+
+                <form id="form1" enctype="multipart/form-data" method="post" action="Upload.aspx">
+                    <div class="row">
+                        <label for="fileToUpload">选择文件上传，文件名即为共享数据名</label>
+                        <input type="file" name="fileToUpload" id="fileToUpload" onchange="fileSelected();">
+                    </div>
+                    <p id="fileName"></p>
+                    <p id="fileSize"></p>
+                    <p id="fileType"></p>
+                    <div class="row">
+                        <input type="button" onclick="uploadFile2()" value="上传">
+                    </div>
+                    <div id="progressNumber" style="margin-bottom: 7%;"></div>
+                </form>
+        </div>
+    </div>
+
+    <h1>数据详情</h1>
+
+    <div class="display">
+        <p id="name" class="detail"></p>
+        <p id="owner" class="detail"></p>
+        <p id="description" class="detail description"></p>
+        <p id="credit" class="detail"></p>
+        <p id="dlt" class="detail"></p>
+        <div id="next"></div>
+    </div>
+
+    <div class="cover" id='cover2'>
+        <div class="popup" id="popup2">
+            <div class="header">
+                <div class="header-right" onclick="hidder2()">x</div>
+            </div>
+            <p>请确认是否发送请求</p>
+            <p>（常规访问将消耗gas及积分，免费访问将消耗gas）</p>
+            <div class="lr">
+                <button class="cbutton" onclick="normalRequest()">常规访问</button>
+            </div>
+            <div class="lr">
+                <button class="cbutton" onclick="freeCall()">免费访问</button>
+            </div>
+            <div id="txt">
+                <label for="reason">
+                申请缘由
+                </label>
+                <input id="reason" type="text" class="description">
+                <button class="cbutton" onclick="freeRequest()">免费访问确认</button>
+            </div>
+        </div>
+    </div>
+
+	<script>
+        
+        var owner;
+        data = getUrlParas().data;
+        user = getUrlParas().user;
+
+        function getDataDetail(id) {
+            return controlContract.methods.datas(id).call({from: userAccount}, function(error, result) {
+                if(!error)
+                {
+                    dataURL = result.dataAddress;
+                }
+                else console.log(error);
+            });
+        }
+
+
+        function getOwner() {
+            return controlContract.methods.fdataToOwner(getUrlParas().data)
+            .call({from: userAccount}, function(error, result) {
+                if(!error)
+                {
+                    console.log(result);
+                    owner = result;
+                }
+                else console.log(error);
+            });
+        }
+
+        function showData() {
+            getDataDetail(data)
+            .then(function(datad) {
+                getUser(getUrlParas().user)
+                .then(function(userd) {
+                    getOwner()
+                    .then(function(ownerId) {
+                        getUser(ownerId)
+                        .then(function(owner) {
+                            console.log(owner);
+
+                            $("#name").text("数据名称：" + getDataName(datad.dataName));
+                            $("#owner").text("数据拥有者：" + owner.userName);
+                            $("#description").text("数据描述：" + datad.dataDescription);
+                            $("#credit").text("所需积分：" + datad.dataCredit);
+                            $("#dlt").text("下载次数：" + datad.downloadTimes);
+
+                            $("#newDescription").text("数据描述：" + datad.dataDescription);
+                            $("#newCredit").text("所需积分：" + datad.dataCredit);
+                            $("#next").empty();
+                            var j = 0;
+                            if(ownerId == userd.userId) {
+                                j = 1;
+                                $("#next").append(`<div>
+                                        <div class="lr">
+                                            <button id="dbutton">下载</button>
+                                        </div>
+                                        <div class="lr">
+                                            <button id="abutton">修改</button>
+                                        </div>
+                                    </div>`);
+                                $("#dbutton").click(function() {
+                                    window.open(dataURL);
+                                });
+                                $("#abutton").click(function() {
+                                    alterD();
+                                });
+                            }
+                            else{
+                                getAccessible(user)
+                                .then(function(acc) {
+                                    var accessibleData = [];
+                                    accessibleData = acc;
+                                    console.log(accessibleData);
+                                    for (var i = accessibleData.length - 1; i >= 0; i--) {
+                                        if(accessibleData[i] == getUrlParas().data)
+                                        {
+                                            j = 1;
+                                            $("#next").empty();
+                                            $("#next").append(`<div>
+                                                    <button id="dbutton">下载</button>
+                                                </div>`);
+                                            $("#dbutton").click(function() {
+                                                window.open(dataURL);
+                                            });
+                                            break;
+                                        }
+                                    }
+                                });
+                                
+                            }
+                            
+                            
+                            if(j == 0)
+                            {
+                                $("#next").append(`<button id="dbutton">请求访问</button>`);
+                                $("#dbutton").click(function() {
+                                    $("#cover2").show();
+                                });
+                            }
+                        });
+                        
+                    });
+                });
+            });
+        }
+
+        function normalRequest() {
+            listCheck()
+            .then(function(res1) {
+                let r1 = res1;
+                if (!r1) {
+                    creditCheck()
+                    .then(function(res2) {
+                        let r2 = res2;
+                            console.log(r2);
+                        if(r2) {
+                            console.log(80);
+                            controlContract.methods.shareRequest(getUrlParas().user, getUrlParas().data)
+                            .send({from: userAccount, gas:1000000})
+                            .on("receipt", function (receipt) {
+                                console.log(receipt);
+                            })
+                            .on("error", function (error) {
+                                console.log(error);
+                            });
+                        }
+                        else alert("积分不足！");
+                    });
+                }
+                else alert("已被禁止访问！");
+                
+            })
+        }
+
+        function freeCall() {
+            $("#popup2").height(500);
+            $("#txt").show();
+        }
+
+        function freeRequest() {
+            listCheck()
+            .then(function(res) {
+                let r = res;
+                    console.log(r);
+                if(!r) {
+                    console.log(80);
+                    controlContract.methods.freeRequest(getUrlParas().user, getUrlParas().data, $("#reason").val())
+                    .send({from: userAccount, gas:1000000})
+                    .on("receipt", function (receipt) {
+                        console.log(receipt);
+                    })
+                    .on("error", function (error) {
+                        console.log(error);
+                    });
+                }
+                else alert("已被禁止访问！");
+            });
+            
+        }
+
+        function alterD() {
+            $("#cover1").show();
+        }
+
+        setWeb3();
+        showData();
+        hidder1();
+        hidder2();
+        getNot(data);
+
+        controlContract.events.RequestApproved(function(error, result) {
+            if (!error)
+            {
+                console.log(result);
+                alert("常规访问成功！");
+                window.open(dataURL);
+                hidder2();
+                window.location.href = document.location;
+            } 
+        else console.log(error);
+        });
+        
+        controlContract.events.AlterData(function(error, result) {
+            if (!error)
+            {
+                console.log(result);
+                alert("修改成功在链上发布！");
+                hidder1();
+                window.location.href = document.location;
+            } 
+            else console.log(error);
+        });
+
+        controlContract.events.FreeRequest(function(error, result) {
+            if (!error)
+            {
+                console.log(result);
+                alert("免费访问申请成功在链上发布！");
+                hidder2();
+            } 
+        else console.log(error);
+        });
+
+
+    </script>
+
+	
+</body>
+
+</html>

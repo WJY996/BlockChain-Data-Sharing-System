@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <style></style>
+    <meta charset="utf-8">
+
+    <script src="js/web3.min.js"></script>
+    <script src="js/controlAbi.js"></script>
+    <script src="js/control.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+        
+    </script>
+    <title>上传文件</title>
+    <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+    <h1>发布共享数据</h1>
+
+    <div>
+        
+        <label for="description">
+        描述
+        </label>
+        <input id="description" type="text" class="description">
+
+        <label for="not">
+        不被允许访问数据的用户（多个用户名请以","分隔）
+        </label>
+        <input id="not" type="text">
+
+        <label for="credit">
+        所需积分
+        </label>
+        <input id="credit" type="text">
+
+    </div>
+
+    <form id="form1" enctype="multipart/form-data" method="post" action="Upload.aspx">
+        <div class="row">
+            <label for="fileToUpload">选择文件上传</label>
+            <input type="file" name="fileToUpload" id="fileToUpload" onchange="fileSelected();">
+        </div>
+        <p id="fileName"></p>
+        <p id="fileSize"></p>
+        <p id="fileType"></p>
+        <div class="row">
+            <input type="button" onclick="uploadFile1()" value="上传">
+        </div>
+        <div id="progressNumber" style="margin-bottom: 7%;"></div>
+    </form>
+
+    <div id="bottom" class="bottom">
+        <div class="lr">
+            <button class="cbutton" onclick="userDetail()">我的</button>
+        </div>
+        <div class="lr">
+            <button class="cbutton" onclick="toMain()">返回首页</button>
+        </div>
+    </div>
+
+    <script>
+
+        setWeb3();
+        user = getUrlPara();
+        getUser(user);
+
+        controlContract.events.NewData(function(error,event) {
+            if(!error)
+            {
+                console.log(event); // same results as the optional callback above
+                alert("成功在链上发布！");
+            }
+            else console.log(error);
+        })
+
+    </script>
+
+</body></html>

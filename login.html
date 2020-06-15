@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>用户登录</title>
+
+    <link rel="stylesheet" type="text/css" href="main.css">
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="js/web3.min.js"></script>
+    <script src="js/controlAbi.js"></script>
+    <script src="js/control.js"></script>
+
+</head>
+<body>
+    <div class="container">
+
+        <h1>数据共享系统</h1>
+
+        <label for="username" class="col-lg-2 control-label">
+        用户名
+        </label>
+        <input id="username" type="text">
+
+        <label for="pwd" class="col-lg-2 control-label">
+        密码
+        </label>
+        <input id="pwd" type="password">
+
+        <button id="lbutton">登录</button>
+        <button id="rbutton">注册</button>
+
+    </div>
+
+    <p id="result"></p>
+
+    <script src="js/control.js"></script>
+    <script>
+
+    	$("#lbutton").click(function() {       
+            console.log($("#username").val());
+            controlContract.methods.fnameToid($("#username").val()).call({from: '0x60b91300d54f7F44C41F5b0dD7B40FeAfAa2581b'}, function(error1, result1) {
+    			if(!error1) {
+    				console.log(result1);
+    				let userid = result1;
+                    console.log(userid);
+    				controlContract.methods.users(userid).call({from: '0x60b91300d54f7F44C41F5b0dD7B40FeAfAa2581b'}, function(error2, result2) {
+    					if(!error2) {
+    						console.log(result2);
+    						let user = result2;
+                            console.log(user.pwd);
+    						if(user.pwd == $("#pwd").val())
+				    		{
+				    			let url = "main.html?user="+ userid;
+				    	        window.location.href = url;
+				    		}
+				    		else {
+				    			alert("用户名或密码错误");
+				    		}
+    					}
+    					else {
+    						alert("用户名或密码错误");
+    						console.log(error2);
+    					} 
+    				});
+    			}
+    			else console.log(error1);
+    		});
+		});
+
+    	setWeb3();
+        $("#rbutton").click(function() {
+    		window.location.href = "register.html";
+    	});
+
+    </script>
+
+</body>
+</html>
+
+
+
+
