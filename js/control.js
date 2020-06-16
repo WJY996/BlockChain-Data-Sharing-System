@@ -79,16 +79,6 @@
             let dataName = name.split("/")[0];//分割.
             return dataName;
         }
-
-        function getLength() {
-            return controlContract.methods.getUserLength().call({from: defaultAccount}, function(error, result) {
-                if(!error)
-                {
-                    console.log(result);
-                }
-                else console.log(error);
-            });
-        }
         
         function userDetail() {
             let url = "userDetail.html?user=" + user;
@@ -97,7 +87,7 @@
 
         function upload() {
         	console.log(user);
-            let url = "fileupload1.html?user=" + user;
+            let url = "fileupload.html?user=" + user;
             window.location.href = url;
         }
 
@@ -127,13 +117,24 @@
             .call({from: userAccount}, function(error, result) {
                 if(!error)
                 {
-                    console.log(result);
                     r = result;
                     userAccount = r.userAddress;
                 }
                 else console.log(error);
             });
         
+        }
+
+
+        function getLength() {
+            return controlContract.methods.getUserLength()
+            .call({from: defaultAccount}, function(error, result) {
+                if(!error)
+                {
+                    console.log(result);
+                }
+                else console.log(error);
+            });
         }
 
         function getUserId(name) {
@@ -149,9 +150,29 @@
         
         }
 
-        function getAccessible(id) {
-            return controlContract.methods.getAccessible(id)
+        function getOwner() {
+            return controlContract.methods.fdataToOwner(getUrlParas().data)
             .call({from: userAccount}, function(error, result) {
+                if(!error)
+                {
+                    owner = result;
+                }
+                else console.log(error);
+            });
+        }
+
+        function getDataDetail(id) {
+            return controlContract.methods.datas(id).call({from: userAccount}, function(error, result) {
+                if(!error)
+                {
+                    dataURL = result.dataAddress;
+                }
+                else console.log(error);
+            });
+        }
+
+        function getDataLength() {
+            return controlContract.methods.getDataLength().call({from: userAccount}, function(error, result) {
                 if(!error)
                 {
                     console.log(result);
@@ -160,14 +181,33 @@
             });
         }
 
+        function getMsgList(id) {
+            return controlContract.methods.getMsgList(id)
+            .call({from: userAccount}, function(error, result) {
+                if(error)
+                {
+                    console.log(error);
+                }
+            });
+        }
+
+        function getAccessible(id) {
+            return controlContract.methods.getAccessible(id)
+            .call({from: userAccount}, function(error, result) {
+                if(error)
+                {
+                    console.log(error);
+                }
+            });
+        }
+
         function getNot(id) {
             return controlContract.methods.getNotAllowed(id)
             .call({from: userAccount}, function(error, result) {
-                if(!error)
+                if(error)
                 {
-                    console.log(result);
+                    console.log(error);
                 }
-                else console.log(error);
             });
         }
 
@@ -184,11 +224,10 @@
                             let n = i;
                     controlContract.methods.fnameToid(arr[i])
                     .call({from: userAccount}, function(error, result) {
-                        if(!error)
-                        {
-                            console.log(result);
-                        }
-                        else console.log(error);
+                        if(error)
+		                {
+		                    console.log(error);
+		                }
                     })
                     .then(function(result) {
                             console.log(n);
@@ -207,8 +246,6 @@
         }
 
         function listCheck() {
-        	console.log(user);
-        	console.log(data);
         	return controlContract.methods.checkList(data, user)
             .call({from: userAccount}, function(error, result) {
                 if(!error)
@@ -230,184 +267,4 @@
             });
         }
 
-        function fileSelected() {
-            file = document.getElementById('fileToUpload').files[0];
-            if (file) {
-                var fileSize = 0;
-                if (file.size > 1024 * 1024)
-                    fileSize = (Math.round(file.size * 100 / (1024 * 1024)) / 100).toString() + 'MB';
-                else
-                    fileSize = (Math.round(file.size * 100 / 1024) / 100).toString() + 'KB';
-                $("#fileName").text('共享数据名称: ' + getDataName(file.name));
-                $("#fileSize").text('共享数据大小: ' + fileSize);
-                $("#fileType").text('共享数据类型: ' + getDataType(file.type));
-                fileURL = "http://47.240.169.239:8100/blockchain/download.do?filename=" + file.name;
-            }
-        }
-
-        function uploadFile1() {
-        	controlContract.methods.isExitDataName(document.getElementById('fileToUpload').files[0].name, 0)
-            .call({from: userAccount}, function(error, result) {
-                if(!error)
-                {
-                    console.log(result);
-                    if(!result) {
-			            var fd = new FormData();
-			            fd.append("fileToUpload", document.getElementById('fileToUpload').files[0]);
-			            var xhr = new XMLHttpRequest();
-			            xhr.upload.addEventListener("progress", uploadProgress, false);
-			            xhr.addEventListener("load", uploadComplete1, false);
-			            xhr.addEventListener("error", uploadFailed, false);
-			            xhr.addEventListener("abort", uploadCanceled, false);
-			            xhr.open("POST", "http://47.240.169.239:8100/blockchain/upload.do"); //修改成自己的接口
-			            xhr.send(fd);
-                    }
-                    else alert("共享数据名不得重复！");
-                }
-                else console.log(error);
-            });
-        }
-
-        function uploadFile2() {
-        	controlContract.methods.isExitDataName(document.getElementById('fileToUpload').files[0].name, data)
-            .call({from: userAccount}, function(error, result) {
-                if(!error)
-                {
-                    console.log(result);
-                    if(!result) {
-			            var fd = new FormData();
-			            fd.append("fileToUpload", document.getElementById('fileToUpload').files[0]);
-			            var xhr = new XMLHttpRequest();
-			            xhr.upload.addEventListener("progress", uploadProgress, false);
-			            xhr.addEventListener("load", uploadComplete2, false);
-			            xhr.addEventListener("error", uploadFailed, false);
-			            xhr.addEventListener("abort", uploadCanceled, false);
-			            xhr.open("POST", "http://47.240.169.239:8100/blockchain/upload.do"); //修改成自己的接口
-			            xhr.send(fd);
-                    }
-                    else alert("共享数据名不得重复！");
-                }
-                else console.log(error);
-            });
-        }
-
-        function uploadProgress(evt) {
-            if (evt.lengthComputable) {
-                var percentComplete = Math.round(evt.loaded * 100 / evt.total);
-                document.getElementById('progressNumber').innerHTML = percentComplete.toString() + '%';
-            } else {
-                document.getElementById('progressNumber').innerHTML = 'unable to compute';
-            }
-        }
-
-        function uploadComplete1(evt) {
-            //alert(evt.target.responseText);
-            var list = $("#not").val();
-            var no = [];
-            var arr;
-            var k = 0;
-            if (list) {
-                arr = list.split(",");
-                console.log(arr);
-                for (var i = arr.length - 1; i >= 0; i--) {
-                            console.log(i);
-                            let n = i;
-                    controlContract.methods.fnameToid(arr[i])
-                    .call({from: userAccount}, function(error, result) {
-                        if(!error)
-                        {
-                            console.log(result);
-                        }
-                        else console.log(error);
-                    })
-                    .then(function(result) {
-                            console.log(n);
-                            no[n] = result;
-                            console.log(no);
-                            if(k == (arr.length - 1)) {
-                				console.log(no);
-					            controlContract.methods.createData(user, Number($("#credit").val()), no, file.name, $("#description").val(), fileURL)
-					            .send({from: userAccount, gas:1000000})
-					            .on("receipt", function (receipt) {
-					                console.log(receipt);
-					            })
-					            .on("error", function (error) {
-					                console.log(error);
-					            });
-                            }
-                            k++;
-                    });
-                }
-
-            }
-            else {
-            	controlContract.methods.createData(user, Number($("#credit").val()), no, file.name, $("#description").val(), fileURL)
-	            .send({from: userAccount, gas:1000000})
-	            .on("receipt", function (receipt) {
-	                console.log(receipt);
-	            })
-	            .on("error", function (error) {
-	                console.log(error);
-	            });
-            }
-        }
-
-        function uploadComplete2(evt) {
-            //console.log(evt.target.responseText);
-            var list = $("#not").val();
-            var no = [];
-            var arr;
-            var k = 0;
-            if (list) {
-                arr = list.split(",");
-                console.log(arr);
-                for (var i = arr.length - 1; i >= 0; i--) {
-                            console.log(i);
-                            let n = i;
-                    controlContract.methods.fnameToid(arr[i])
-                    .call({from: userAccount}, function(error, result) {
-                        if(!error)
-                        {
-                            console.log(result);
-                        }
-                        else console.log(error);
-                    })
-                    .then(function(result) {
-                            console.log(n);
-                            no[n] = result;
-                            console.log(no);
-                            if(k == (arr.length - 1)) {
-                				console.log(no);
-					            controlContract.methods.alterData(data, Number($("#newCredit").val()), file.name, $("#newDescription").val(), fileURL, no)
-					            .send({from: userAccount, gas:1000000})
-					            .on("receipt", function (receipt) {
-					                console.log(receipt);
-					            })
-					            .on("error", function (error) {
-					                console.log(error);
-					            });
-                            }
-                            k++;
-                    });
-                }
-
-            }
-            else {
-            	controlContract.methods.alterData(data, Number($("#newCredit").val()), file.name, $("#newDescription").val(), fileURL, no)
-	            .send({from: userAccount, gas:1000000})
-	            .on("receipt", function (receipt) {
-	                console.log(receipt);
-	            })
-	            .on("error", function (error) {
-	                console.log(error);
-	            });
-            }
-        }
-
-        function uploadFailed(evt) {
-            alert("上传失败");
-        }
-
-        function uploadCanceled(evt) {
-            alert("上传取消");
-        }
+        
