@@ -2,6 +2,7 @@
 
 		var web3;
 		var controlContract;
+		var defaultAccount
 
 		function setWeb3() {
 			if (typeof web3 !== 'undefined') {
@@ -12,6 +13,13 @@
         	}
         	controlContract = new web3.eth.Contract(controlABI,'0x7048FA82244472bc65810280d9009eF814152BfF');
 
+		}
+
+		function setAccount()
+		{
+		    web3.eth.getAccounts().then((accounts) => {
+		        defaultAccount = accounts[0];
+		    });
 		}
 
         var userAccount;
@@ -73,7 +81,7 @@
         }
 
         function getLength() {
-            return controlContract.methods.getUserLength().call({from: '0x60b91300d54f7F44C41F5b0dD7B40FeAfAa2581b'}, function(error, result) {
+            return controlContract.methods.getUserLength().call({from: defaultAccount}, function(error, result) {
                 if(!error)
                 {
                     console.log(result);

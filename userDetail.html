@@ -226,8 +226,6 @@
             }
             if(s2 == 1) {
                 ac = visitorAccount;
-                md = msgId;
-                console.log(md);
                 if ((ba % 2) == 0) {
                     n2 = getDataName(n2);
                     $("#lmsgs").append(`<div class="data" style="height: 220px;">
@@ -235,24 +233,25 @@
                       <p>申请数据: ${n2}</p>
                       <p>申请原因: ${t}</p>
                       <div class="lr">
-                        <button id="a" onclick="console.log(md)">批准</button>
+                        <button id="a" onclick="approve(ac, ${msgId})">批准</button>
                       </div>
                       <div class="lr">
-                        <button id="d" onclick="console.log(md)">拒绝</button>
+                        <button id="d" onclick="deny(ac, ${msgId})">拒绝</button>
                       </div>
                     </div>`);
                 }
                 else {
+                    console.log(msgId);
                     n2 = getDataName(n2);
                     $("#rmsgs").append(`<div class="data" style="height: 220px;">
                       <p>申请用户: ${n1}</p>
                       <p>申请数据: ${n2}</p>
                       <p>申请原因: ${t}</p>
                       <div class="lr">
-                        <button id="a" onclick="console.log(md)">批准</button>
+                        <button id="a" onclick="approve(ac, ${msgId})">批准</button>
                       </div>
                       <div class="lr">
-                        <button id="d" onclick="console.log(md)">拒绝</button>
+                        <button id="d" onclick="deny(ac, ${msgId})">拒绝</button>
                       </div>
                     </div>`);
                 }
@@ -277,8 +276,7 @@
                       <p>申请状态: ${st}</p>
                     </div>`);
                 }
-            }
-        }
+            }        }
  
         function displayMsgs() {
             getMsgList(user)
@@ -292,6 +290,7 @@
                     controlContract.methods.msgs(id).call({from: userAccount}, function(error1, msg) {
                     if(!error1)
                     {
+                        let cid = id;
                         if(msg.resId == user) {
                             if(msg.status == 0) {
                                 controlContract.methods.users(msg.reqId).call({from: userAccount}, function(error2, visitor) {
@@ -299,15 +298,15 @@
                                     {
                                         console.log(msg);
                                         console.log(visitor);
+                                        console.log(cid);
                                         visitorAccount = visitor.userAddress;
-                                        console.log(ba);
                                         getDataDetail(msg.dataId)
                                         .then(function (data) {
                                             console.log(data);
-                                            msgStatus(msg.status, 1, ba, visitor.userName, data.dataName, msg.text, msgs[ba]);
+                                            msgStatus(msg.status, 1, ba, visitor.userName, data.dataName, msg.text, cid);
                                             ba++;
                                         });
-                                        console.log(msgs[ba]);
+                                        console.log(cid);
                                     }
                                     else console.log(error2);
                                 });
@@ -319,14 +318,14 @@
                                 {
                                     console.log(msg);
                                     console.log(owner);
-                                    console.log(ba);
+                                    console.log(cid);
                                     getDataDetail(msg.dataId)
                                     .then(function (data) {
                                         console.log(data);
-                                        msgStatus(msg.status, 0, ba, owner.userName, data.dataName, msg.text, msgs[ba]);
+                                        msgStatus(msg.status, 0, ba, owner.userName, data.dataName, msg.text, cid);
                                         ba++;
                                     });
-                                    console.log(msgs[ba]);
+                                    console.log(cid);
                                 }
                                 else console.log(error3);
                             });
